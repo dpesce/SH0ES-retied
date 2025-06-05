@@ -237,146 +237,98 @@ if include_MCP:
 
 if include_Miras:
 
-    papers_to_include = ['H20','H24']
-
-    # intrinsic PLR scatter
-    sigm_Miras_intrinsic = 0.13
-
     ############################
     # Miras from Huang+ (2024) -- M101
 
-    if 'H24' in papers_to_include:
+    # read data table
+    P_Miras, m_Miras, sigm_Miras = np.loadtxt('./data_tables/Miras_H18.dat',usecols=(1,4,5),skiprows=1,unpack=True)
 
-        # read data table
-        P_Miras, m_Miras, sigm_Miras, Delta_mb = np.loadtxt('./data_tables/Miras_H24.dat',usecols=(7,10,11,13),skiprows=31,unpack=True)
+    # measurements for fitting
+    y_Miras = m_Miras
 
-        # quality flagging, per the paper
-        ind_keep = (P_Miras > 200.0) & (P_Miras < 500.0)
-        P_Miras = P_Miras[ind_keep]
-        m_Miras = m_Miras[ind_keep]
-        sigm_Miras = sigm_Miras[ind_keep]
-        Delta_mb = Delta_mb[ind_keep]
+    # add to data vector
+    y_new = np.concatenate((y,y_Miras))
 
-        # add intrinsic PLR scatter to measurement uncertainties
-        sigm_Miras = np.sqrt(sigm_Miras**2.0 + sigm_Miras_intrinsic**2.0)
+    # update design matrix, including the addition of new parameters for Mira PLR zeropoint and coefficient
+    A_Miras = np.zeros((A.shape[0]+2,len(y_Miras)))
+    A_Miras[0,:] = 1.0                                # these measurements are only for M101
+    A_Miras[-2,:] = 1.0                               # the new PLR zeropoint parameter
+    A_Miras[-1,:] = (np.log10(P_Miras) - 2.3)         # the new PLR coefficient parameter
+    A_new = np.zeros((A.shape[0]+2,A.shape[1]+len(y_Miras)))
+    A_new[:A.shape[0],:A.shape[1]] = np.copy(A)
+    A_new[:,A.shape[1]:] = A_Miras
 
-        # measurements for fitting
-        y_Miras = m_Miras + Delta_mb
+    # update covariance matrix
+    C_Miras = np.diag(sigm_Miras**2.0)
+    zeromat = np.zeros((len(y_Miras),len(C)))
+    C_new = np.block([[C,zeromat.T],[zeromat,C_Miras]])
 
-        # add to data vector
-        y_new = np.concatenate((y,y_Miras))
-
-        # update design matrix, including the addition of new parameters for Mira PLR zeropoint and coefficient
-        A_Miras = np.zeros((A.shape[0]+2,len(y_Miras)))
-        A_Miras[0,:] = 1.0                                # these measurements are only for M101
-        A_Miras[-2,:] = 1.0                               # the new PLR zeropoint parameter
-        A_Miras[-1,:] = (np.log10(P_Miras) - 2.3)         # the new PLR coefficient parameter
-        A_new = np.zeros((A.shape[0]+2,A.shape[1]+len(y_Miras)))
-        A_new[:A.shape[0],:A.shape[1]] = np.copy(A)
-        A_new[:,A.shape[1]:] = A_Miras
-
-        # update covariance matrix
-        C_Miras = np.diag(sigm_Miras**2.0)
-        zeromat = np.zeros((len(y_Miras),len(C)))
-        C_new = np.block([[C,zeromat.T],[zeromat,C_Miras]])
-
-        # regain notation
-        A = np.copy(A_new)
-        C = np.copy(C_new)
-        y = np.copy(y_new)
+    # regain notation
+    A = np.copy(A_new)
+    C = np.copy(C_new)
+    y = np.copy(y_new)
 
     ############################
     # Miras from Huang+ (2020) -- NGC 1559
 
-    if 'H20' in papers_to_include:
+    # read data table
+    P_Miras, m_Miras, sigm_Miras = np.loadtxt('./data_tables/Miras_H20.dat',usecols=(1,4,5),skiprows=1,unpack=True)
 
-        # read data table
-        P_Miras, m_Miras, sigm_Miras, Delta_mb = np.loadtxt('./data_tables/Miras_H20.dat',usecols=(1,11,12,14),skiprows=26,unpack=True)
+    # measurements for fitting
+    y_Miras = m_Miras
 
-        # quality flagging, per the paper
-        ind_keep = (P_Miras > 240.0) & (P_Miras < 400.0)
-        P_Miras = P_Miras[ind_keep]
-        m_Miras = m_Miras[ind_keep]
-        sigm_Miras = sigm_Miras[ind_keep]
-        Delta_mb = Delta_mb[ind_keep]
+    # add to data vector
+    y_new = np.concatenate((y,y_Miras))
 
-        # add intrinsic PLR scatter to measurement uncertainties
-        sigm_Miras = np.sqrt(sigm_Miras**2.0 + sigm_Miras_intrinsic**2.0)
+    # update design matrix
+    A_Miras = np.zeros((A.shape[0],len(y_Miras)))
+    A_Miras[8,:] = 1.0                                # these measurements are only for N1559
+    A_Miras[-2,:] = 1.0                               # the new PLR zeropoint parameter
+    A_Miras[-1,:] = (np.log10(P_Miras) - 2.3)         # the new PLR coefficient parameter
+    A_new = np.zeros((A.shape[0],A.shape[1]+len(y_Miras)))
+    A_new[:A.shape[0],:A.shape[1]] = np.copy(A)
+    A_new[:,A.shape[1]:] = A_Miras
 
-        # measurements for fitting
-        y_Miras = m_Miras + Delta_mb
+    # update covariance matrix
+    C_Miras = np.diag(sigm_Miras**2.0)
+    zeromat = np.zeros((len(y_Miras),len(C)))
+    C_new = np.block([[C,zeromat.T],[zeromat,C_Miras]])
 
-        # add to data vector
-        y_new = np.concatenate((y,y_Miras))
-
-        # update design matrix
-        A_Miras = np.zeros((A.shape[0],len(y_Miras)))
-        A_Miras[8,:] = 1.0                                # these measurements are only for N1559
-        A_Miras[-2,:] = 1.0                               # the new PLR zeropoint parameter
-        A_Miras[-1,:] = (np.log10(P_Miras) - 2.3)         # the new PLR coefficient parameter
-        A_new = np.zeros((A.shape[0],A.shape[1]+len(y_Miras)))
-        A_new[:A.shape[0],:A.shape[1]] = np.copy(A)
-        A_new[:,A.shape[1]:] = A_Miras
-
-        # update covariance matrix
-        C_Miras = np.diag(sigm_Miras**2.0)
-        zeromat = np.zeros((len(y_Miras),len(C)))
-        C_new = np.block([[C,zeromat.T],[zeromat,C_Miras]])
-
-        # regain notation
-        A = np.copy(A_new)
-        C = np.copy(C_new)
-        y = np.copy(y_new)
+    # regain notation
+    A = np.copy(A_new)
+    C = np.copy(C_new)
+    y = np.copy(y_new)
 
     ############################
     # Miras from Huang+ (2018) -- NGC 4258
 
-    if 'H18' in papers_to_include:
+    # read data table
+    P_Miras, m_Miras, sigm_Miras = np.loadtxt('./data_tables/Miras_H24.dat',usecols=(1,4,5),skiprows=1,unpack=True)
 
-        # read data table
-        P_Miras, m_Miras = np.loadtxt('./data_tables/Miras_H18.dat',usecols=(1,11),skiprows=31,unpack=True)
-        quality_flag = np.loadtxt('./data_tables/Miras_H18.dat',usecols=(13),skiprows=31,unpack=True,dtype='str')
-        sigm_Miras = 0.0*np.ones_like(P_Miras)
-        Delta_mb = 0.22*np.ones_like(P_Miras)
+    # measurements for fitting
+    y_Miras = m_Miras
 
-        # quality flagging, per the paper
-        ind_keep = (quality_flag == 'Gold')
-        P_Miras = P_Miras[ind_keep]
-        m_Miras = m_Miras[ind_keep]
-        sigm_Miras = sigm_Miras[ind_keep]
-        Delta_mb = Delta_mb[ind_keep]
+    # add to data vector
+    y_new = np.concatenate((y,y_Miras))
 
-        # add zeropoint offset, per Caroline
-        zpt_offset = 0.1912
-        m_Miras -= zpt_offset
+    # update design matrix
+    A_Miras = np.zeros((A.shape[0],len(y_Miras)))
+    A_Miras[37,:] = 1.0                                # these measurements are only for N4258
+    A_Miras[-2,:] = 1.0                               # the new PLR zeropoint parameter
+    A_Miras[-1,:] = (np.log10(P_Miras) - 2.3)         # the new PLR coefficient parameter
+    A_new = np.zeros((A.shape[0],A.shape[1]+len(y_Miras)))
+    A_new[:A.shape[0],:A.shape[1]] = np.copy(A)
+    A_new[:,A.shape[1]:] = A_Miras
 
-        # add intrinsic PLR scatter to measurement uncertainties
-        sigm_Miras = np.sqrt(sigm_Miras**2.0 + sigm_Miras_intrinsic**2.0)
+    # update covariance matrix
+    C_Miras = np.diag(sigm_Miras**2.0)
+    zeromat = np.zeros((len(y_Miras),len(C)))
+    C_new = np.block([[C,zeromat.T],[zeromat,C_Miras]])
 
-        # measurements for fitting
-        y_Miras = m_Miras + Delta_mb
-
-        # add to data vector
-        y_new = np.concatenate((y,y_Miras))
-
-        # update design matrix
-        A_Miras = np.zeros((A.shape[0],len(y_Miras)))
-        A_Miras[37,:] = 1.0                                # these measurements are only for N4258
-        A_Miras[-2,:] = 1.0                               # the new PLR zeropoint parameter
-        A_Miras[-1,:] = (np.log10(P_Miras) - 2.3)         # the new PLR coefficient parameter
-        A_new = np.zeros((A.shape[0],A.shape[1]+len(y_Miras)))
-        A_new[:A.shape[0],:A.shape[1]] = np.copy(A)
-        A_new[:,A.shape[1]:] = A_Miras
-
-        # update covariance matrix
-        C_Miras = np.diag(sigm_Miras**2.0)
-        zeromat = np.zeros((len(y_Miras),len(C)))
-        C_new = np.block([[C,zeromat.T],[zeromat,C_Miras]])
-
-        # regain notation
-        A = np.copy(A_new)
-        C = np.copy(C_new)
-        y = np.copy(y_new)
+    # regain notation
+    A = np.copy(A_new)
+    C = np.copy(C_new)
+    y = np.copy(y_new)
 
 ###################################################
 # add TRGBs 
